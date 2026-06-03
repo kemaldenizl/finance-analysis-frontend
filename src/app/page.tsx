@@ -1,7 +1,5 @@
-export default function Home() {
-  return (
-    <>
-      Ana Sayfa 
-    </>
-  );
+import { HomePage } from "@/src/features/home";
+
+export default function Page() {
+  return <HomePage />;
 }
