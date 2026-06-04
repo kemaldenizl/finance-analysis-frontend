@@ -37,6 +37,12 @@ export default function EmailVerificationPage() {
           >
             Ana Sayfaya Dön
           </Link>
+          <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
+          <Link href="/mfa/kurulum" className="font-semibold text-cyan-700 dark:text-cyan-300">
+            2 Adımlı Kimlik Doğrulamayla
+          </Link>{" "}
+          Hesap Güvenliğini Arttır.{" "}
+        </p>
         </div>
       </section>
     </div>
