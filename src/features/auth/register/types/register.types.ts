@@ -16,8 +16,8 @@ export type RegisterDto = {
 export type RegisterResponse = {
   user: {
     id: string;
-  email: string;
-  emailVerified: boolean;
-  isActive: boolean;
+    email: string;
+    emailVerified: boolean;
+    isActive: boolean;
   }
 };

@@ -5,6 +5,7 @@ import { validateFormData } from "@/src/shared/lib/validation/form-validation.ts
 import { registerSchema } from "@/src/features/auth/register/schema";
 import { routeApi } from "@/src/shared/lib/api/route-api";
 import { redirect } from "next/navigation";
+import { setPendingVerificationCookie } from "@/src/shared/lib/auth/pending-verification-cookie";
 
 export type RegisterActionState = {
   success: boolean;
@@ -37,12 +38,14 @@ export async function registerAction(_prevState: RegisterActionState, formData: 
     }
   }
 
-  if(!response.data.user.emailVerified) {
+  const user = response.data.user;
+  if(!user.emailVerified) {
+    await setPendingVerificationCookie({
+      userId: user.id,
+      email: user.email,
+    });
     redirect(`/email-dogrula`)
   }
 
-  return {
-    success: true,
-    message: "Hesap başarıyla oluşturuldu.",
-  };
+  redirect('/')
 }

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serverApi } from "@/src/shared/lib/api/server-api";
 
-import type { RegisterDto, RegisterResponse, } from "@/src/features/auth/register/types/register.types";
+import type { RegisterDto, RegisterResponse } from "@/src/features/auth/register/types/register.types";
+import { setPendingVerificationCookie } from "@/src/shared/lib/auth/pending-verification-cookie";
 
 export async function POST(request: NextRequest) {
     const body = await request.json() as RegisterDto;
@@ -11,6 +12,6 @@ export async function POST(request: NextRequest) {
         method: "POST",
         body: body,
     })
-    
+
     return NextResponse.json( response, { status: response.status, });
 }
