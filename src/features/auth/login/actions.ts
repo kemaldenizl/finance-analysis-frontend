@@ -9,7 +9,7 @@ import { loginSchema } from "./schema";
 import { routeApi } from "@/src/shared/lib/api/route-api";
 import { setPendingVerificationCookie } from "@/src/shared/lib/auth/pending-verification-cookie";
 import { redirect } from "next/navigation";
-import { setAuthCookies } from "@/src/shared/lib/auth/token-cookie";
+import { setAuthCookies, setMfaChallengeCookie } from "@/src/shared/lib/auth/token-cookie";
 
 export type LoginActionState = {
   success: boolean;
@@ -58,7 +58,13 @@ export async function loginAction(_prevState: LoginActionState, formData: FormDa
     redirect(`/email-dogrula`)
   }
 
-  if(response.data.requiresMfa) {
+  if(response.data.requiresMfa && response.data.mfaChallenge) {
+    const challengeToken = response.data.mfaChallenge?.challengeToken;
+    const expiresAtUtc = response.data.mfaChallenge?.expiresAtUtc;
+    await setMfaChallengeCookie({
+      challengeToken: challengeToken,
+      expiresAtUtc: expiresAtUtc,
+    });
     redirect('/mfa/giris-yap')
   }else{
     const tokens = response.data.tokens;

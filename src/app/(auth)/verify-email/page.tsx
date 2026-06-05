@@ -21,9 +21,6 @@ export default async function EmailVerificationPage( {searchParams} : VerifyEmai
     return <VerifyEmailError />;
   }
 
-  if(result.success) {
-    await clearPendingVerificationCookie();
-  }
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-12">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

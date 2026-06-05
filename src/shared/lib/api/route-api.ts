@@ -91,6 +91,7 @@ export async function routeApi<TResponse, TBody = unknown>({
         "Content-Type": "application/json",
         ...headers,
       },
+      credentials: "include",
       body:
         method !== "GET" && body !== undefined
           ? JSON.stringify(body)

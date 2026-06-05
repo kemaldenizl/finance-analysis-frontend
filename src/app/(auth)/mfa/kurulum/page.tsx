@@ -1,3 +1,8 @@
+import { createMfa } from "@/src/features/auth/mfa/actions";
+import MfaSetupQr from "@/src/features/auth/mfa/components/mfa-setup-qr";
+import { CreateMfaResponse } from "@/src/features/auth/mfa/types/mfa.types";
+import MfaComplateForm from "@/src/features/auth/mfa/components/mfa-complate-form";
+
 const setupMethods = [
   {
     title: "Google Authenticator",
@@ -22,7 +27,15 @@ const setupTips = [
   "Yeni cihaza geçişte recovery kodların hesabını kurtarmak için gerekir.",
 ];
 
-export default function MfaSetupPage() {
+export default async function MfaSetupPage() {
+
+  let result: CreateMfaResponse | null = null;
+  try {
+    result = await createMfa() as CreateMfaResponse;
+  }catch(error) {
+    result = null;
+  }
+
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-1">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -69,42 +82,9 @@ export default function MfaSetupPage() {
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-[220px_1fr]">
-          <div className="flex h-[220px] items-center justify-center rounded-2xl border border-black/10 bg-background dark:border-white/15">
-            <div className="text-center">
-              <div className="mx-auto grid h-28 w-28 grid-cols-6 gap-1 rounded-md bg-black/90 p-2 dark:bg-white/90">
-                {Array.from({ length: 36 }).map((_, index) => (
-                  <span
-                    key={index}
-                    className={`rounded-[2px] ${
-                      index % 3 === 0 || index % 5 === 0
-                        ? "bg-white/90 dark:bg-black/90"
-                        : "bg-transparent"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">QR Kod</p>
-            </div>
-          </div>
+          <MfaSetupQr otpAuthUri={result?.otpAuthUri ?? ''}/>
 
-          <form className="space-y-4">
-            <label className="block space-y-2">
-              <span className="text-sm font-medium">6 Haneli Doğrulama Kodu</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="000000"
-                className="w-full rounded-xl border border-black/10 bg-background px-3.5 py-2.5 text-sm tracking-[0.3em] outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15"
-              />
-            </label>
-            <button
-              type="button"
-              className="w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500 cursor-pointer"
-            >
-              MFA Onayla
-            </button>
-          </form>
+          <MfaComplateForm />
         </div>
       </section>
     </div>

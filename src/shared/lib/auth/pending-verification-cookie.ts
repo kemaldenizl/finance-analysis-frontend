@@ -41,5 +41,5 @@ export async function getPendingVerificationCookie(): Promise<PendingVerificatio
 export async function clearPendingVerificationCookie() {
   const cookieStore = await cookies();
 
-  cookieStore.delete(COOKIE_NAME);
+  cookieStore.delete({ name: COOKIE_NAME, path: "/" });
 }

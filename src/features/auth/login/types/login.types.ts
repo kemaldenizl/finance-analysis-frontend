@@ -26,7 +26,7 @@ export type LoginResponse = {
     refreshTokenExpiresAtUtc: string;
   }
   mfaChallenge: null | {
-    challangeToken: string;
+    challengeToken: string;
     expiresAtUtc: string;
   };
   requiresMfa: boolean;

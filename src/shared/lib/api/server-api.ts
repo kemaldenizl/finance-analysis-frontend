@@ -75,6 +75,7 @@ export async function serverApi<TResponse, TBody = unknown>({
       method,
       cache,
       next,
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
