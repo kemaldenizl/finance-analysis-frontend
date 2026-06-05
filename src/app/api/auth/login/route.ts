@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serverApi } from "@/src/shared/lib/api/server-api";
 
-import type { RegisterDto, RegisterResponse } from "@/src/features/auth/register/types/register.types";
+import type { LoginDto, LoginResponse } from "@/src/features/auth/login/types/login.types";
 
 export async function POST(request: NextRequest) {
-    const body = await request.json() as RegisterDto;
+    const body = await request.json() as LoginDto;
 
-    const response = await serverApi<RegisterResponse, RegisterDto>({
-        endpoint: "/api/auth/register",
+    const response = await serverApi<LoginResponse, LoginDto>({
+        endpoint: "/api/auth/login",
         method: "POST",
         body: body,
     })

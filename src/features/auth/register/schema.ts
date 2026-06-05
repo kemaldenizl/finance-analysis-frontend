@@ -5,7 +5,7 @@ export const registerSchema = z.object({
     .string()
     .email("Geçerli bir email adresi gir.")
     .min(1, "Email boş bırakılamaz.")
-    .max(320, "Email en fazla 255 karakter olabilir."),
+    .max(320, "Email en fazla 320 karakter olabilir."),
 
   password: z
     .string()
