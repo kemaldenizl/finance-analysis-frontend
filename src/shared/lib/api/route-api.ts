@@ -7,6 +7,7 @@ type RouteApiOptions<TBody = unknown> = {
   query?: QueryParams;
   headers?: HeadersInit;
   cache?: RequestCache;
+  refreshToken?: string | null;
 };
 
 function getBaseUrl(): string {
@@ -82,6 +83,7 @@ export async function routeApi<TResponse, TBody = unknown>({
   query,
   headers,
   cache = "no-store",
+  refreshToken = null,
 }: RouteApiOptions<TBody>): Promise<ApiResult<TResponse>> {
   try {
     const response = await fetch(buildRouteUrl(endpoint, query), {
@@ -90,6 +92,7 @@ export async function routeApi<TResponse, TBody = unknown>({
       headers: {
         "Content-Type": "application/json",
         ...headers,
+        'Refresh-Token': refreshToken ?? '',
       },
       credentials: "include",
       body:

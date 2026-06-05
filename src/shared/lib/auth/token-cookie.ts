@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
-const ACCESS_TOKEN_COOKIE = "access_token";
-const REFRESH_TOKEN_COOKIE = "refresh_token";
+export const ACCESS_TOKEN_COOKIE = "access_token";
+export const REFRESH_TOKEN_COOKIE = "refresh_token";
 const MFA_CHALLENGE_COOKIE = "mfa_challenge";
 type SetAuthCookiesParams = {
   accessToken: string;

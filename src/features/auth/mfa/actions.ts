@@ -1,6 +1,6 @@
 'use server';
 
-import { getAccessToken, getMfaChallengeCookie, setAuthCookies, clearMfaChallengeCookie } from "@/src/shared/lib/auth/token-cookie";
+import { getAccessToken ,getMfaChallengeCookie, setAuthCookies, clearMfaChallengeCookie, getRefreshToken } from "@/src/shared/lib/auth/token-cookie";
 import { routeApi } from "@/src/shared/lib/api/route-api";
 import { CreateMfaResponse } from "@/src/features/auth/mfa/types/mfa.types";
 import { mfaComplateSchema } from "./schema";
@@ -12,13 +12,14 @@ import { LoginResponse } from "../login/types/login.types";
 
 export async function createMfa() {
   const accessToken = await getAccessToken();
-
+  const refreshToken = await getRefreshToken();
   const response = await routeApi<CreateMfaResponse>({
     endpoint: "/api/auth/mfa/create",
     method: "POST",
     headers: {
         Authorization: `Bearer ${accessToken}`,
     },
+    refreshToken: refreshToken,
   });
 
   if (!response.success) {

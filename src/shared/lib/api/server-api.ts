@@ -1,3 +1,4 @@
+import { refreshAction } from "@/src/features/auth/refresh/actions";
 import type { ApiResult, HttpMethod, QueryParams } from "./types";
 
 type ServerApiOptions<TBody = unknown> = {
@@ -9,6 +10,8 @@ type ServerApiOptions<TBody = unknown> = {
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
   token?: string;
+  authRetry?: boolean;
+  refreshToken?: string | null;
 };
 
 const API_BASE_URL = process.env.API_BASE_URL;
@@ -69,6 +72,8 @@ export async function serverApi<TResponse, TBody = unknown>({
   cache = "no-store",
   next,
   token,
+  authRetry = false,
+  refreshToken = null,
 }: ServerApiOptions<TBody>): Promise<ApiResult<TResponse>> {
   try {
     const response = await fetch(buildUrl(endpoint, query), {
@@ -87,7 +92,34 @@ export async function serverApi<TResponse, TBody = unknown>({
           : undefined,
     });
 
-    return parseResponse<TResponse>(response);
+    if (response.status !== 401 || !authRetry) {
+      return parseResponse<TResponse>(response);
+    }
+
+    const refreshResult = await refreshAction(refreshToken);
+
+    if (!refreshResult.success) {
+      return parseResponse<TResponse>(response);
+    }
+
+    const retryResponse = await fetch(buildUrl(endpoint, query), {
+      method,
+      cache,
+      next,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshResult.tokens.accessToken}`,
+        ...headers,
+      },
+      body:
+        method !== "GET" && body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
+    });
+
+    return parseResponse<TResponse>(retryResponse);
+
   } catch (error) {
     return {
       success: false,
