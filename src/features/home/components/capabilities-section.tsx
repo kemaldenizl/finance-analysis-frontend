@@ -2,7 +2,7 @@ import { capabilityCards } from "@/src/features/home/components/home-content";
 
 export function CapabilitiesSection() {
   return (
-    <section id="yetenekler" className="mt-10 space-y-4 md:mt-14">
+    <section id="yetenekler" className="mt-10 scroll-mt-24 space-y-4 md:mt-14">
       <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
         Finans operasyonların için AI yetenek seti
       </h2>

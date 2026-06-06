@@ -14,6 +14,7 @@ const AUTH_ONLY_ROUTES = [
   "/kayit-ol",
   "/sifremi-unuttum",
   "/sifremi-sifirla",
+  "/mfa/giris-yap",
 ];
 
 /** Yalnızca kimliği doğrulanmış kullanıcıların erişebileceği sayfalar. */
@@ -26,6 +27,7 @@ const PROTECTED_ROUTES = [
   "/mfa/kurulum-basla",
   "/mfa/kurulum-tamamla",
   "/mfa/kodlar",
+  "/profil",
 ];
 
 const LOGIN_PATH = "/giris-yap";

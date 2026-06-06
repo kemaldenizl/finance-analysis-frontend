@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
     const code = await request.json();
-    console.log('code:',code);
+    const refreshToken = request.headers.get('Refresh-Token')
     const response = await serverApi<MfaComplateResponse>({
         endpoint: "/api/mfa/setup/complete",
         method: "POST",
@@ -13,10 +13,9 @@ export async function POST(request: NextRequest) {
             Authorization: request.headers.get('Authorization') ?? '',
         },
         body: code,
+        authRetry: true,
+        refreshToken: refreshToken,
     });
-
-    console.log('response nextbackend:',response);
-    console.log('request headers:',request.headers);
 
     return NextResponse.json(response, { status: response.status, });
 }

@@ -40,7 +40,7 @@ export type MfaComplateActionState = {
 
 export async function mfaComplateAction(_prevState: MfaComplateActionState, formData: FormData): Promise<MfaComplateActionState> {
   const validatedData = validateFormData(mfaComplateSchema,formData);
-
+  const refreshToken = await getRefreshToken();
   if (!validatedData.success) {
     return {
       success: false,
@@ -56,6 +56,7 @@ export async function mfaComplateAction(_prevState: MfaComplateActionState, form
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    refreshToken: refreshToken,
   });
   if (!response.success) {
     return {

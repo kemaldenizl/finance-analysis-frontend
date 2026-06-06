@@ -1,6 +1,20 @@
 import Link from "next/link";
+import ResetPasswordForm from "@/src/features/auth/reset-password/components/reset-password-form";
 
-export default function ResetPasswordPage() {
+type ResetPasswordPageProps = {
+  searchParams: Promise<{
+    token?: string;
+  }>;
+};
+
+export default async function ResetPasswordPage( { searchParams }: ResetPasswordPageProps ) {
+  const params = await searchParams;
+  const token = params.token;
+
+  if(!token) {
+    return <ResetPasswordError />;
+  }
+
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-12">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -20,26 +34,7 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <form className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">Yeni Şifre</span>
-            <input
-              type="password"
-              name="newPassword"
-              placeholder="Yeni şifreni gir"
-              autoComplete="new-password"
-              required
-              className="w-full rounded-xl border border-black/10 bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500 cursor-pointer"
-          >
-            Onayla
-          </button>
-        </form>
+        <ResetPasswordForm token={token} />
 
         <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
           Giriş ekranına dönmek için{" "}
@@ -50,5 +45,25 @@ export default function ResetPasswordPage() {
         </p>
       </section>
     </div>
+  );
+}
+
+function ResetPasswordError() {
+  return (
+    <>
+      <div className="relative flex min-h-[78vh] items-center justify-center py-12">
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div className="absolute -left-16 top-16 h-64 w-64 animate-[pulse_6s_ease-in-out_infinite] rounded-full bg-emerald-500/20 blur-3xl dark:bg-emerald-400/10" />
+          <div className="absolute -right-20 bottom-8 h-72 w-72 animate-[pulse_7s_ease-in-out_infinite] rounded-full bg-cyan-500/20 blur-3xl dark:bg-cyan-400/10" />
+        </div>
+      </div>
+      <section className="w-full max-w-md rounded-3xl border border-black/10 bg-white/80 p-7 shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+        <div className="mb-6">
+          <p className="inline-flex rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+            Şifre Sıfırlama Bağlantısı Geçersiz
+          </p>
+        </div>
+      </section>
+    </>
   );
 }
