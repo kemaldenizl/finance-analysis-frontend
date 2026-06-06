@@ -31,7 +31,6 @@ export async function registerAction(_prevState: RegisterActionState, formData: 
   });
 
   if (!response.success) {
-    console.error(response.error);
     return {
       success: false,
       message: "Hesap oluşturulurken bir hata oluştu.",

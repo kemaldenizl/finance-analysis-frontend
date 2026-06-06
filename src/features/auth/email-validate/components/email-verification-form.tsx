@@ -10,7 +10,6 @@ const initialState: SendAgainEmailVerificationActionState = {
 export default function EmailVerificationForm( { maskedEmail }: { maskedEmail: string } ) {
 
   const [state, formAction] = useActionState(sendAgainEmailVerificationAction, initialState);
-  console.log('state',state);
   return (
     <>
       <form action={formAction}>

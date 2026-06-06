@@ -47,7 +47,6 @@ export async function mfaComplateAction(_prevState: MfaComplateActionState, form
       message: 'Lütfen 6 haneli doğrulama kodunu giriniz.',
     }
   }
-  console.log('validatedData:',validatedData.data);
   const accessToken = await getAccessToken();
   const response = await routeApi<MfaComplateResponse>({
     endpoint: "/api/auth/mfa/complate",
@@ -66,9 +65,6 @@ export async function mfaComplateAction(_prevState: MfaComplateActionState, form
   }
 
   await setRecoveryCodesCookie(response.data.recoveryCodes);
-
-  console.log('response action:',response);
-  console.log(accessToken);
 
   redirect('/mfa/kodlar');
 }

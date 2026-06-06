@@ -30,6 +30,7 @@ export async function AppShell({ children, currentTheme }: AppShellProps) {
             <nav className="hidden items-center gap-4 text-sm text-slate-600 dark:text-slate-300 md:flex">
               {isAuthenticated ? (
                 <>
+                  <Link href='/ai-basla'>AI Analizi</Link> 
                   <Link href='/profil'>Profil</Link>
                   <LogoutButton />
                 </>

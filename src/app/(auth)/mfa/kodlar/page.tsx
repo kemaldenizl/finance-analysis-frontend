@@ -23,7 +23,6 @@ const safetyNotes = [
 export default async function MfaRecoveryCodesPage() {
 
   const recoveryCodes = await getRecoveryCodesFromCookie();
-  console.log('recoveryCodes:',recoveryCodes);
   if(!recoveryCodes) {
     redirect('/mfa/kurulum');
   }

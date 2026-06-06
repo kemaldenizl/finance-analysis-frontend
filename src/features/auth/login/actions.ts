@@ -35,7 +35,6 @@ export async function loginAction(_prevState: LoginActionState, formData: FormDa
   });
 
   if (!response.success) {
-    console.error(response.error);
     return {
       success: false,
       message: "Giriş yapılırken bir hata oluştu.",

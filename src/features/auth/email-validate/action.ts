@@ -19,7 +19,6 @@ export async function sendAgainEmailVerificationAction(_prevState: SendAgainEmai
             message: "Doğrulama oturumu bulunamadı.",
         }
     }
-    console.log('user',pendingUser);
     
     const response = await routeApi<SendAgainEmailVerificationResponse>({
         endpoint: "/api/auth/email-verification/send-again",
@@ -30,7 +29,6 @@ export async function sendAgainEmailVerificationAction(_prevState: SendAgainEmai
     });
 
     if(!response.success) {
-        console.error(response.error);
         return {
           success: false,
           message: "Mail Gönderilirken Bir Hata Oluştu.",
