@@ -1,15 +1,6 @@
 import Link from "next/link";
-
-const recoveryCodes = [
-  "A7K9-P2L4",
-  "Q3M8-R1D6",
-  "T5X2-N9B7",
-  "C4V1-H8J3",
-  "E9W6-Z2F5",
-  "U1Y7-K4S8",
-  "L8P3-G5T1",
-  "N2R6-D9M4",
-];
+import { getRecoveryCodesFromCookie } from "@/src/shared/lib/auth/recovery-codes-cookie";
+import { redirect } from "next/navigation";
 
 const safetyNotes = [
   {
@@ -29,7 +20,13 @@ const safetyNotes = [
   },
 ];
 
-export default function MfaRecoveryCodesPage() {
+export default async function MfaRecoveryCodesPage() {
+
+  const recoveryCodes = await getRecoveryCodesFromCookie();
+  if(!recoveryCodes) {
+    redirect('/mfa/kurulum');
+  }
+
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-1">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">

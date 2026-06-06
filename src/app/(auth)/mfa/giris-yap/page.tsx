@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MfaLoginForm } from "@/src/features/auth/mfa/components/mfa-login-form";
 
 export default function MfaLoginPage() {
   return (
@@ -20,25 +21,7 @@ export default function MfaLoginPage() {
           </p>
         </div>
 
-        <form className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">6 Haneli Kod</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              className="w-full rounded-xl border border-black/10 bg-background px-3.5 py-2.5 text-center text-lg tracking-[0.3em] outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15"
-            />
-          </label>
-
-          <button
-            type="button"
-            className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
-          >
-            Giriş Yap
-          </button>
-        </form>
+        <MfaLoginForm />
 
         <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
           Kod alamıyorsan{" "}

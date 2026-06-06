@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/src/shared/components/ui/theme-toggle";
 import type { ThemeMode } from "@/src/shared/types/theme.types";
+import { getAccessToken } from "@/src/shared/lib/auth/token-cookie";
+import LogoutButton from "@/src/shared/components/layout/logout-button";
 
 type AppShellProps = Readonly<{
   children: React.ReactNode;
   currentTheme: ThemeMode;
 }>;
 
-export function AppShell({ children, currentTheme }: AppShellProps) {
+export async function AppShell({ children, currentTheme }: AppShellProps) {
+  const isAuthenticated = Boolean(await getAccessToken());
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -24,9 +28,18 @@ export function AppShell({ children, currentTheme }: AppShellProps) {
 
           <div className="flex items-center gap-4">
             <nav className="hidden items-center gap-4 text-sm text-slate-600 dark:text-slate-300 md:flex">
-              <a href="#yetenekler" className="transition hover:text-foreground">
-                Yetenekler
-              </a>
+              {isAuthenticated ? (
+                <>
+                  <Link href='/ai-basla'>AI Analizi</Link> 
+                  <Link href='/profil'>Profil</Link>
+                  <LogoutButton />
+                </>
+              ) : (
+                <>
+                  <Link href='/giris-yap'>Giriş Yap</Link>
+                  <Link href='/kayit-ol'>Kayıt Ol</Link>
+                </>
+              )}
             </nav>
             <ThemeToggle currentTheme={currentTheme} />
           </div>

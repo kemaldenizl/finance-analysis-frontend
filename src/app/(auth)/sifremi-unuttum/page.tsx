@@ -1,4 +1,5 @@
 import Link from "next/link";
+import EmailForm from "@/src/features/auth/forgot-password/components/email-form";
 
 export default function ForgotPasswordPage() {
   return (
@@ -20,26 +21,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <form className="space-y-4">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium">E-posta</span>
-            <input
-              type="email"
-              name="email"
-              placeholder="ornek@mail.com"
-              autoComplete="email"
-              required
-              className="w-full rounded-xl border border-black/10 bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
-          >
-            Doğrulama Linki Gönder
-          </button>
-        </form>
+        <EmailForm />
 
         <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
           Şifreni hatırladıysan{" "}
