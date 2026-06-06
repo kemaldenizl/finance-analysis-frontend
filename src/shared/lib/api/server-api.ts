@@ -12,16 +12,21 @@ type ServerApiOptions<TBody = unknown> = {
   token?: string;
   authRetry?: boolean;
   refreshToken?: string | null;
+  link?: boolean;
 };
 
 const API_BASE_URL = process.env.API_BASE_URL;
+const API_BASE_URL_SERVER = process.env.API_BASE_URL_SERVER;
 
-function buildUrl(endpoint: string, query?: QueryParams): string {
+function buildUrl(endpoint: string, query?: QueryParams, link?: boolean): string {
   if (!API_BASE_URL) {
     throw new Error("API_BASE_URL environment variable is missing.");
   }
+  if (!API_BASE_URL_SERVER) {
+    throw new Error("API_BASE_URL_SERVER environment variable is missing.");
+  }
 
-  const base = API_BASE_URL.replace(/\/$/, "");
+  const base = link ? API_BASE_URL_SERVER.replace(/\/$/, "") : API_BASE_URL.replace(/\/$/, "");
   const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
   const url = new URL(`${base}${path}`);
@@ -74,22 +79,35 @@ export async function serverApi<TResponse, TBody = unknown>({
   token,
   authRetry = false,
   refreshToken = null,
+  link = false,
 }: ServerApiOptions<TBody>): Promise<ApiResult<TResponse>> {
+  /**
+   * FormData (ör. dosya yükleme) gönderildiğinde Content-Type'ı tarayıcı/fetch
+   * otomatik (boundary ile) ayarlamalı; JSON serileştirmesi yapılmaz.
+   */
+  const isFormData = body instanceof FormData;
+
+  const buildBody = (): BodyInit | undefined => {
+    if (method === "GET" || body === undefined) {
+      return undefined;
+    }
+    return isFormData ? (body as FormData) : JSON.stringify(body);
+  };
+
+  const buildHeaders = (authToken?: string): HeadersInit => ({
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...headers,
+  });
+
   try {
-    const response = await fetch(buildUrl(endpoint, query), {
+    const response = await fetch(buildUrl(endpoint, query, link), {
       method,
       cache,
       next,
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...headers,
-      },
-      body:
-        method !== "GET" && body !== undefined
-          ? JSON.stringify(body)
-          : undefined,
+      headers: buildHeaders(token),
+      body: buildBody(),
     });
 
     if (response.status !== 401 || !authRetry) {
@@ -102,20 +120,13 @@ export async function serverApi<TResponse, TBody = unknown>({
       return parseResponse<TResponse>(response);
     }
 
-    const retryResponse = await fetch(buildUrl(endpoint, query), {
+    const retryResponse = await fetch(buildUrl(endpoint, query, link), {
       method,
       cache,
       next,
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${refreshResult.tokens.accessToken}`,
-        ...headers,
-      },
-      body:
-        method !== "GET" && body !== undefined
-          ? JSON.stringify(body)
-          : undefined,
+      headers: buildHeaders(refreshResult.tokens.accessToken),
+      body: buildBody(),
     });
 
     return parseResponse<TResponse>(retryResponse);

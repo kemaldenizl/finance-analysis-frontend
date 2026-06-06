@@ -1,20 +1,70 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  UPLOAD_RESULT_STORAGE_KEY,
+  type UploadFileData,
+} from "@/src/features/analysis/ai-upload";
 
-const fileDetails = [
-  { label: "Dosya Adı", value: "ekstre-mayis-2026.pdf" },
-  { label: "Dosya Türü", value: "PDF Dökümanı" },
-  { label: "Dosya Boyutu", value: "2.4 MB" },
-  { label: "Yüklenme Tarihi", value: "04.06.2026 18:28" },
-];
+function formatFileSize(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "-";
+  }
 
-const checks = [
-  "Dosya başarıyla yüklendi",
-  "Ön işleme tamamlandı",
-  "Okunabilirlik kontrolü tamamlandı",
-  "Görsel işleme ve metin çıkarımı için hazır",
-];
+  const units = ["B", "KB", "MB", "GB"];
+  const exponent = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  const value = bytes / 1024 ** exponent;
+
+  return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function DosyaVerileriPage() {
+  const [data, setData] = useState<UploadFileData | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(UPLOAD_RESULT_STORAGE_KEY);
+
+    if (raw) {
+      try {
+        setData(JSON.parse(raw) as UploadFileData);
+      } catch {
+        setData(null);
+      }
+    }
+
+    setIsReady(true);
+  }, []);
+
+  const fileDetails = data
+    ? [
+        { label: "Dosya Adı", value: data.file.fileName },
+        { label: "Dosya Türü", value: data.response.classification.kind },
+        { label: "Dosya Boyutu", value: formatFileSize(data.file.size) },
+        { label: "Yüklenme Tarihi", value: formatDate(data.file.uploadedAt) },
+      ]
+    : [];
+
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-1">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -34,56 +84,68 @@ export default function DosyaVerileriPage() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
-          <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-indigo-500/40 bg-indigo-500/5 p-6">
-            <div className="text-center">
-              <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">
-                ekstre-mayis-2026.pdf
-              </p>
-              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-                Dosya önizleme alanı
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {fileDetails.map((detail) => (
-              <article
-                key={detail.label}
-                className="rounded-2xl border border-black/10 bg-background p-3 dark:border-white/15"
-              >
-                <p className="text-xs text-slate-500 dark:text-slate-400">{detail.label}</p>
-                <p className="mt-1 text-sm font-semibold">{detail.value}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-4">
-          <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
-            Kontrol Durumu
+        {!isReady ? (
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Veriler yükleniyor...
           </p>
-          <ul className="mt-2 space-y-1.5 text-xs text-indigo-900 dark:text-indigo-100">
-            {checks.map((check) => (
-              <li key={check}>• {check}</li>
-            ))}
-          </ul>
-        </div>
+        ) : !data ? (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+              Görüntülenecek dosya verisi bulunamadı.
+            </p>
+            <p className="mt-1 text-xs text-amber-900/80 dark:text-amber-100/80">
+              Lütfen önce bir dosya yükleyin.
+            </p>
+            <Link
+              href="/dosya-yukle"
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              Dosya Yükleme Ekranına Git
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
+              <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-indigo-500/40 bg-indigo-500/5 p-6">
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-200">
+                    {data.file.fileName}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                    Dosya önizleme alanı
+                  </p>
+                </div>
+              </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
-          >
-            Verileri Çıkar
-          </button>
-          <Link
-            href="/dosya-yukle"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-background px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
-          >
-            Dosya Yükleme Ekranına Dön
-          </Link>
-        </div>
+              <div className="space-y-3">
+                {fileDetails.map((detail) => (
+                  <article
+                    key={detail.label}
+                    className="rounded-2xl border border-black/10 bg-background p-3 dark:border-white/15"
+                  >
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{detail.label}</p>
+                    <p className="mt-1 text-sm font-semibold wrap-break-word">{detail.value}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
+              >
+                Verileri Çıkar
+              </button>
+              <Link
+                href="/dosya-yukle"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-background px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+              >
+                Dosya Yükleme Ekranına Dön
+              </Link>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

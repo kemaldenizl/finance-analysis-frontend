@@ -1,4 +1,13 @@
-import Link from "next/link";
+"use client";
+
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useProfile } from "@/src/shared/hooks/profile";
+import {
+  uploadTransactionFileAction,
+  UPLOAD_RESULT_STORAGE_KEY,
+  type UploadFileActionState,
+} from "@/src/features/analysis/ai-upload";
 
 const supportedFiles = [
   {
@@ -23,7 +32,31 @@ const supportedFiles = [
   },
 ];
 
+const initialState: UploadFileActionState = {
+  success: false,
+};
+
 export default function DosyaYuklePage() {
+  const router = useRouter();
+  const { profile } = useProfile();
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [state, formAction, isPending] = useActionState(
+    uploadTransactionFileAction,
+    initialState,
+  );
+
+  const userId = profile?.userId ?? "";
+
+  useEffect(() => {
+    if (state.success && state.data) {
+      sessionStorage.setItem(
+        UPLOAD_RESULT_STORAGE_KEY,
+        JSON.stringify(state.data),
+      );
+      router.push("/dosya-yukle/veriler");
+    }
+  }, [state, router]);
+
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-12">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -44,45 +77,63 @@ export default function DosyaYuklePage() {
             dökümanlarını bu ekrandan sisteme ekleyebilirsin.
           </p>
         </div>
+        <form action={formAction}>
+          <input type="hidden" name="user_id" value={userId} />
 
-        <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-500/40 bg-cyan-500/5 px-6 py-10 text-center transition hover:bg-cyan-500/10">
-          <span className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
-            Dosya Seç veya Sürükle-Bırak
-          </span>
-          <span className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-            PNG, JPG, JPEG ve PDF formatları desteklenir.
-          </span>
-          <input type="file" className="sr-only" />
-        </label>
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-cyan-500/40 bg-cyan-500/5 px-6 py-10 text-center transition hover:bg-cyan-500/10">
+            <span className="text-sm font-semibold text-cyan-800 dark:text-cyan-200">
+              {fileName ?? "Dosya Seç veya Sürükle-Bırak"}
+            </span>
+            <span className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+              PNG, JPG, JPEG ve PDF formatları desteklenir.
+            </span>
+            <input
+              type="file"
+              name="file"
+              accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
+              required
+              className="sr-only"
+              onChange={(event) =>
+                setFileName(event.target.files?.[0]?.name ?? null)
+              }
+            />
+          </label>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          {supportedFiles.map((fileType) => (
-            <article
-              key={fileType.title}
-              className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15"
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {supportedFiles.map((fileType) => (
+              <article
+                key={fileType.title}
+                className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15"
+              >
+                <h2 className="text-sm font-semibold">{fileType.title}</h2>
+                <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
+                  {fileType.description}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-3">
+            <button
+              type="submit"
+              disabled={isPending || !userId}
+              className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <h2 className="text-sm font-semibold">{fileType.title}</h2>
-              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-                {fileType.description}
-              </p>
-            </article>
-          ))}
-        </div>
+              {isPending ? "Yükleniyor..." : "Dosyayı Yükle"}
+            </button>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
-          >
-            Dosyayı Yükle
-          </button>
-          <Link
-            href="/ai-basla"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-background px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
-          >
-            Geri Dön
-          </Link>
-        </div>
+            {state.message ? (
+              <p
+                aria-live="polite"
+                className={`text-sm ${
+                  state.success ? "text-emerald-600" : "text-red-500"
+                }`}
+              >
+                {state.message}
+              </p>
+            ) : null}
+          </div>
+        </form>
       </section>
     </div>
   );
