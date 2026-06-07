@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
+  extractTransactionDataAction,
   UPLOAD_RESULT_STORAGE_KEY,
+  EXTRACT_RESULT_STORAGE_KEY,
   type UploadFileData,
+  ExtractDataActionState,
 } from "@/src/features/analysis/ai-upload";
+import { useRouter } from "next/navigation";
 
 function formatFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) {
@@ -38,9 +42,33 @@ function formatDate(value: string): string {
   });
 }
 
+const initialState: ExtractDataActionState = {
+  success: false,
+};
+
 export default function DosyaVerileriPage() {
   const [data, setData] = useState<UploadFileData | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(
+    async (
+      _prevState: ExtractDataActionState,
+      _formData: FormData,
+    ): Promise<ExtractDataActionState> => {
+      if (!data) {
+        return {
+          success: false,
+          message: "Dosya verisi bulunamadı. Lütfen dosyayı tekrar yükleyin.",
+        };
+      }
+
+      return extractTransactionDataAction({
+        inputId: data.response.input_id,
+        fileName: data.response.classification.kind,
+      });
+    },
+    initialState,
+  );
 
   useEffect(() => {
     const raw = sessionStorage.getItem(UPLOAD_RESULT_STORAGE_KEY);
@@ -54,7 +82,15 @@ export default function DosyaVerileriPage() {
     }
 
     setIsReady(true);
-  }, []);
+
+    if(state.success && state.data){
+      sessionStorage.setItem(
+        EXTRACT_RESULT_STORAGE_KEY,
+        JSON.stringify(state.data),
+      );
+      router.push("/satir-giris");
+    }
+  }, [state, router]);
 
   const fileDetails = data
     ? [
@@ -130,20 +166,34 @@ export default function DosyaVerileriPage() {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
-              >
-                Verileri Çıkar
-              </button>
-              <Link
-                href="/dosya-yukle"
-                className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-background px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
-              >
-                Dosya Yükleme Ekranına Dön
-              </Link>
-            </div>
+            <form action={formAction}>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending ? "Veriler Çıkarılıyor..." : "Verileri Çıkar"}
+                </button>
+                <Link
+                  href="/dosya-yukle"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-black/10 bg-background px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+                >
+                  Dosya Yükleme Ekranına Dön
+                </Link>
+              </div>
+
+              {state.message ? (
+                <p
+                  aria-live="polite"
+                  className={`mt-4 text-sm ${
+                    state.success ? "text-emerald-600" : "text-red-500"
+                  }`}
+                >
+                  {state.message}
+                </p>
+              ) : null}
+            </form>
           </>
         )}
       </section>

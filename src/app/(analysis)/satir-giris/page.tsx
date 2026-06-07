@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { ExtractedDataResponse, Transaction } from "@/src/features/analysis/ai-upload/types/upload.types";
+import { EXTRACT_RESULT_STORAGE_KEY } from "@/src/features/analysis/ai-upload";
 
 type TransactionDirection = "debit" | "credit";
 
@@ -27,6 +29,18 @@ function createEmptyRow(): TransactionFormRow {
   };
 }
 
+function createFullRow(transaction: Transaction): TransactionFormRow {
+  return {
+    id: transaction.transaction_id,
+    date: transaction.date ?? "",
+    description: transaction.description ?? "",
+    merchant: transaction.merchant.display_name ?? "",
+    amount: transaction.amount?.toString() ?? "",
+    currency: transaction.original_currency ?? "TRY",
+    direction: transaction.direction ?? "debit",
+  }
+}
+
 export default function SatirGirisPage() {
   const [rows, setRows] = useState<TransactionFormRow[]>([createEmptyRow()]);
 
@@ -50,6 +64,18 @@ export default function SatirGirisPage() {
       prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
     );
   };
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(EXTRACT_RESULT_STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw) as ExtractedDataResponse;
+      const transactions = data.response.result.transactions;
+
+      if (transactions && transactions.length > 0) {
+        setRows(transactions.map(createFullRow));
+      }
+    }
+  }, []);
 
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-12">

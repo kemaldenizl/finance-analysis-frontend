@@ -6,8 +6,10 @@ import {
   getRefreshToken,
 } from "@/src/shared/lib/auth/token-cookie";
 import type {
+  ExtractDataActionState,
   UploadFileActionState,
   UploadFileData,
+  ExtractedDataResponse,
 } from "./types/upload.types";
 
 export async function uploadTransactionFileAction(
@@ -58,6 +60,54 @@ export async function uploadTransactionFileAction(
   return {
     success: true,
     message: "Dosya başarıyla yüklendi.",
+    data: response.data,
+  };
+}
+
+type ExtractTransactionDataInput = {
+  inputId: string;
+  fileName: string;
+};
+
+export async function extractTransactionDataAction({
+  inputId,
+  fileName,
+}: ExtractTransactionDataInput): Promise<ExtractDataActionState> {
+  if (!inputId) {
+    return {
+      success: false,
+      message: "İşlem kimliği bulunamadı. Lütfen dosyayı tekrar yükleyin.",
+    };
+  }
+
+  const accessToken = await getAccessToken();
+  const refreshToken = await getRefreshToken();
+
+  const response = await routeApi<ExtractedDataResponse>({
+    endpoint: "/api/transactions/extract",
+    method: "POST",
+    body: {
+      input_id: inputId,
+      file_name: fileName,
+    },
+    headers: {
+      Authorization: `Bearer ${accessToken ?? ""}`,
+    },
+    refreshToken,
+  });
+
+  if (!response.success) {
+    return {
+      success: false,
+      message: "Veriler çıkarılırken bir hata oluştu. Lütfen tekrar deneyin.",
+    };
+  }
+
+  console.log('Extract data response:', response.data.response.result.transactions);
+
+  return {
+    success: true,
+    message: "Veriler başarıyla çıkarıldı.",
     data: response.data,
   };
 }
