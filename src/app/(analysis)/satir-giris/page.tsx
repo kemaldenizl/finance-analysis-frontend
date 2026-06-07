@@ -1,28 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { useState,useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect, useActionState } from "react";
 import { ExtractedDataResponse, Transaction } from "@/src/features/analysis/ai-upload/types/upload.types";
 import { EXTRACT_RESULT_STORAGE_KEY } from "@/src/features/analysis/ai-upload";
+import { AnalysisActionState } from "@/src/features/analysis/ai-analysis/types/analysis.types";
+import { ANALYSIS_RESULT_STORAGE_KEY } from "@/src/features/analysis/ai-analysis";
+import { startAnalysisAction } from "@/src/features/analysis/ai-analysis/actions";
 
 type TransactionDirection = "debit" | "credit";
 
+const initialState: AnalysisActionState = {
+  success: false,
+};
+
 type TransactionFormRow = {
-  id: string;
+  transaction_id: string;
   date: string;
   description: string;
-  merchant: string;
+  merchant: NormalizedMerchant;
   amount: string;
   currency: string;
   direction: TransactionDirection;
 };
 
+type NormalizedMerchant = {
+  normalized: string;
+}
+
 function createEmptyRow(): TransactionFormRow {
   return {
-    id: `txn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    transaction_id: `txn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     date: "",
     description: "",
-    merchant: "",
+    merchant: {
+      normalized: "",
+    },
     amount: "",
     currency: "TRY",
     direction: "debit",
@@ -31,10 +45,12 @@ function createEmptyRow(): TransactionFormRow {
 
 function createFullRow(transaction: Transaction): TransactionFormRow {
   return {
-    id: transaction.transaction_id,
+    transaction_id: transaction.transaction_id,
     date: transaction.date ?? "",
     description: transaction.description ?? "",
-    merchant: transaction.merchant.display_name ?? "",
+    merchant: {
+      normalized: transaction.merchant.normalized ?? "",
+    },
     amount: transaction.amount?.toString() ?? "",
     currency: transaction.original_currency ?? "TRY",
     direction: transaction.direction ?? "debit",
@@ -42,6 +58,7 @@ function createFullRow(transaction: Transaction): TransactionFormRow {
 }
 
 export default function SatirGirisPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<TransactionFormRow[]>([createEmptyRow()]);
 
   const addNewRow = () => {
@@ -51,7 +68,7 @@ export default function SatirGirisPage() {
   const removeRow = (id: string) => {
     setRows((prev) => {
       if (prev.length <= 1) return prev;
-      return prev.filter((row) => row.id !== id);
+      return prev.filter((row) => row.transaction_id !== id);
     });
   };
 
@@ -61,7 +78,7 @@ export default function SatirGirisPage() {
     value: string,
   ) => {
     setRows((prev) =>
-      prev.map((row) => (row.id === id ? { ...row, [field]: value } : row)),
+      prev.map((row) => (row.transaction_id === id ? { ...row, [field]: value } : row)),
     );
   };
 
@@ -76,6 +93,18 @@ export default function SatirGirisPage() {
       }
     }
   }, []);
+
+  const [state, formAction, isPending] = useActionState(startAnalysisAction, initialState);
+
+  useEffect(() => {
+    if (state.success && state.data) {
+      sessionStorage.setItem(
+        ANALYSIS_RESULT_STORAGE_KEY,
+        JSON.stringify(state.data),
+      );
+      router.push("/ai-analysis");
+    }
+  }, [state, router]);
 
   return (
     <div className="relative flex min-h-[78vh] items-center justify-center py-12">
@@ -103,11 +132,12 @@ export default function SatirGirisPage() {
           Şu an toplam <span className="font-semibold">{rows.length}</span>{" "}
           transaction satırı bulunuyor.
         </div>
-
+        <form action={formAction} >
+        <input type="hidden" name="transactions" value={JSON.stringify(rows)} />
         <div className="space-y-4">
           {rows.map((row, index) => (
             <article
-              key={row.id}
+              key={row.transaction_id}
               className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15"
             >
               <div className="flex items-center justify-between gap-3">
@@ -116,7 +146,7 @@ export default function SatirGirisPage() {
                 </h2>
                 <button
                   type="button"
-                  onClick={() => removeRow(row.id)}
+                  onClick={() => removeRow(row.transaction_id)}
                   disabled={rows.length === 1}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 text-sm font-bold text-rose-700 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-300 cursor-pointer"
                   aria-label={`Transaction ${index + 1} sil`}
@@ -132,7 +162,7 @@ export default function SatirGirisPage() {
                     type="date"
                     value={row.date}
                     onChange={(event) =>
-                      updateRow(row.id, "date", event.target.value)
+                      updateRow(row.transaction_id, "date", event.target.value)
                     }
                     className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
                   />
@@ -145,7 +175,7 @@ export default function SatirGirisPage() {
                     placeholder="TRENDYOL YEMEK"
                     value={row.description}
                     onChange={(event) =>
-                      updateRow(row.id, "description", event.target.value)
+                      updateRow(row.transaction_id, "description", event.target.value)
                     }
                     className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
                   />
@@ -156,9 +186,9 @@ export default function SatirGirisPage() {
                   <input
                     type="text"
                     placeholder="TRENDYOL"
-                    value={row.merchant}
+                    value={row.merchant.normalized}
                     onChange={(event) =>
-                      updateRow(row.id, "merchant", event.target.value)
+                      updateRow(row.transaction_id, "merchant", event.target.value)
                     }
                     className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
                   />
@@ -172,7 +202,7 @@ export default function SatirGirisPage() {
                     placeholder="370.99"
                     value={row.amount}
                     onChange={(event) =>
-                      updateRow(row.id, "amount", event.target.value)
+                      updateRow(row.transaction_id, "amount", event.target.value)
                     }
                     className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
                   />
@@ -185,7 +215,7 @@ export default function SatirGirisPage() {
                     placeholder="TRY"
                     value={row.currency}
                     onChange={(event) =>
-                      updateRow(row.id, "currency", event.target.value)
+                      updateRow(row.transaction_id, "currency", event.target.value)
                     }
                     className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm uppercase outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
                   />
@@ -197,7 +227,7 @@ export default function SatirGirisPage() {
                     value={row.direction}
                     onChange={(event) =>
                       updateRow(
-                        row.id,
+                        row.transaction_id,
                         "direction",
                         event.target.value as TransactionDirection,
                       )
@@ -222,10 +252,11 @@ export default function SatirGirisPage() {
             Yeni Satır Aç
           </button>
           <button
-            type="button"
-            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
+            type="submit"
+            disabled={isPending}
+            className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Analize Başla
+            {isPending ? "Analiz Başlatılıyor..." : "Analize Başla"}
           </button>
           <Link
             href="/ai-basla"
@@ -234,6 +265,7 @@ export default function SatirGirisPage() {
             Geri Dön
           </Link>
         </div>
+        </form>
       </section>
     </div>
   );
