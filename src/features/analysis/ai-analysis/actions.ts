@@ -33,7 +33,7 @@ export async function startAnalysisAction(
             }
         },
         historical_transactions: transactions,
-        question: "What is the total amount of transactions?",
+        question: "Transactionların miktarı ne kadar?",
         purchase_scenario: {
             amount: 6000,
             currency: "TRY",
@@ -59,13 +59,12 @@ export async function startAnalysisAction(
         };
     }
 
-    console.log('Analysis response', response.data.response);
-
     return {
         success: true,
         message: "Analysis started successfully",
         data: response.data
     };
+    
 }
 
 function generateId(): string {

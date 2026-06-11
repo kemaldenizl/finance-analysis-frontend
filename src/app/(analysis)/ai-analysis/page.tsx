@@ -163,7 +163,8 @@ export default function AiAnalysisPage() {
         )}
       </div>
 
-      <ChatBot />
+      
+      {analysis?.analysis_id && <ChatBot analysisId={analysis.analysis_id}/>}
     </div>
   );
 }

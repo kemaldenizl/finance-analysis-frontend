@@ -1,9 +1,67 @@
 'use client';
 
-import { useState } from "react";
-export default function ChatBot() {
+import { FormEvent, useMemo, useState } from "react";
+import { sendChatMessageAction } from "../actions";
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  meta?: string;
+};
+
+export default function ChatBot({ analysisId }: { analysisId: string }) {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const hasMessages = useMemo(() => messages.length > 0, [messages.length]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedQuestion = question.trim();
+    if (!trimmedQuestion || isSending) {
+      return;
+    }
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text: trimmedQuestion,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setQuestion("");
+    setErrorMessage(null);
+    setIsSending(true);
+
+    const result = await sendChatMessageAction({
+      analysis_id: analysisId,
+      question: trimmedQuestion,
+    });
+
+    setIsSending(false);
+
+    if (!result.success || !result.data?.response.answer) {
+      setErrorMessage(result.message ?? "Yanıt alınamadı. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    const assistant = result.data.response;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        text: assistant.answer,
+        meta: `${assistant.intent} / ${assistant.generation_method}`,
+      },
+    ]);
+  }
 
   return (
     <>
@@ -24,29 +82,56 @@ export default function ChatBot() {
             </span>
           </div>
           <div className="mt-4 h-[390px] overflow-y-auto rounded-xl border border-black/10 bg-background p-3 dark:border-white/15">
-            <div className="space-y-3 text-sm">
-              <div className="max-w-[90%] rounded-xl bg-slate-200 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                Gelecek ay harcama ve anomali durumum nedir?
+            {hasMessages ? (
+              <div className="space-y-3 text-sm">
+                {messages.map((message) => (
+                  <div key={message.id}>
+                    <div
+                      className={
+                        message.role === "assistant"
+                          ? "ml-auto max-w-[90%] rounded-xl bg-cyan-500/15 px-3 py-2 text-cyan-900 dark:text-cyan-100"
+                          : "max-w-[90%] rounded-xl bg-slate-200 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
+                      }
+                    >
+                      {message.text}
+                    </div>
+                    {message.meta ? (
+                      <p className="mt-1 text-right text-[10px] text-slate-500 dark:text-slate-400">
+                        {message.meta}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+                {isSending ? (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Yanıt hazırlanıyor...</p>
+                ) : null}
               </div>
-              <div className="ml-auto max-w-[90%] rounded-xl bg-cyan-500/15 px-3 py-2 text-cyan-900 dark:text-cyan-100">
-                Tahmini aylik harcama: 4276.14 TRY. 1 adet yuksek riskli anomali
-                sinyali goruluyor. Onerilen taksit: 10 ay / 600 TRY.
+            ) : (
+              <div className="flex h-full items-center justify-center text-center text-xs text-slate-500 dark:text-slate-400">
+                Analiz hakkında bir soru göndererek konuşmayı başlatabilirsiniz.
               </div>
-            </div>
+            )}
           </div>
-          <div className="mt-3 flex gap-2">
+          {errorMessage ? (
+            <p className="mt-2 text-xs text-red-500">{errorMessage}</p>
+          ) : null}
+          <form className="mt-3 flex gap-2" onSubmit={handleSubmit}>
             <input
               type="text"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
               placeholder="Mesajini yaz..."
+              disabled={isSending}
               className="w-full rounded-xl border border-black/10 bg-background px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15"
             />
             <button
-              type="button"
+              type="submit"
+              disabled={isSending || !question.trim()}
               className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 cursor-pointer"
             >
-              Gönder
+              {isSending ? "Gönderiliyor..." : "Gönder"}
             </button>
-          </div>
+          </form>
         </aside>
       ) : null}
     </>

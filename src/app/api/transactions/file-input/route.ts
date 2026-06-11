@@ -31,7 +31,5 @@ export async function POST(request: NextRequest) {
     link: true,
   });
 
-  console.log("Backend file-input response:", response);
-
   return NextResponse.json(response, { status: response.status });
 }

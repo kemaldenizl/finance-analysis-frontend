@@ -74,11 +74,21 @@ export default function SatirGirisPage() {
 
   const updateRow = (
     id: string,
-    field: keyof Omit<TransactionFormRow, "id">,
+    field: keyof Omit<TransactionFormRow, "transaction_id">,
     value: string,
   ) => {
     setRows((prev) =>
-      prev.map((row) => (row.transaction_id === id ? { ...row, [field]: value } : row)),
+      prev.map((row) => {
+        if (row.transaction_id !== id) {
+          return row;
+        }
+
+        if (field === "merchant") {
+          return { ...row, merchant: { ...row.merchant, normalized: value } };
+        }
+
+        return { ...row, [field]: value };
+      }),
     );
   };
 

@@ -23,6 +23,7 @@ export type AnalysisActionState = {
 export type AnalysisResponse = {
     response: {
         input_id: string;
+        analysis_id: string | null;
         status: AnalysisStatus;
         result: AnalysisResult;
         quality: QualityInfo;
