@@ -10,7 +10,7 @@ export default function CategorySummary({ summary }: CategorySummaryProps) {
   return (
     <>
       <article className="rounded-3xl border border-black/10 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-        <h2 className="text-lg font-semibold">Kategori Ozeti</h2>
+        <h2 className="text-lg font-semibold">Kategoriler</h2>
         {items.length === 0 ? (
           <p className="mt-4 rounded-2xl border border-black/10 bg-background p-4 text-sm text-slate-600 dark:border-white/15 dark:text-slate-300">
             Kategori özeti bulunamadı.
@@ -24,13 +24,13 @@ export default function CategorySummary({ summary }: CategorySummaryProps) {
               >
                 <p className="text-sm font-semibold">{item.category}</p>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                  Islem sayisi: {item.transaction_count}
+                  İşlem Sayısı: {item.transaction_count}
                 </p>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                  Toplam: {item.total_amount.toFixed(2)} TRY
+                  Toplam Ödeme: {item.total_amount.toFixed(2)} TRY
                 </p>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                  Harcama payi: %{(item.share_of_spend * 100).toFixed(2)}
+                  Harcamanın payı: %{(item.share_of_spend * 100).toFixed(2)}
                 </p>
               </div>
             ))}

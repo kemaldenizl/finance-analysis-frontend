@@ -35,14 +35,14 @@ export default function TransactionTable({
   return (
     <>
       <article className="rounded-3xl border border-black/10 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-        <h2 className="text-lg font-semibold">Transactionlar</h2>
+        <h2 className="text-lg font-semibold">Harcamalar</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          Kullanicinin analiz edilen islem kayitlari
+          Kullanıcının analiz edilen harcama kayıtları
         </p>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {items.length === 0 ? (
             <p className="rounded-2xl border border-black/10 bg-background p-4 text-sm text-slate-600 dark:border-white/15 dark:text-slate-300">
-              Gösterilecek transaction bulunamadı.
+              Gösterilecek harcama bulunamadı.
             </p>
           ) : (
             items.map((txn, index) => (
@@ -52,19 +52,16 @@ export default function TransactionTable({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold">
-                    {txn.description ?? "-"}
+                    {resolveMerchant(txn.merchant) ?? "-"}
                   </p>
                   <p className="text-sm font-semibold">
                     {formatAmount(txn.amount)} {txn.currency ?? ""}
                   </p>
                 </div>
-                <div className="mt-2 grid gap-1 text-xs text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-                  <p>ID: {txn.transaction_id ?? "-"}</p>
-                  <p>Tarih: {txn.date ?? "-"}</p>
-                  <p>Merchant: {resolveMerchant(txn.merchant)}</p>
+                <div className="mt-2 grid gap-1 text-xs text-slate-600 dark:text-slate-300 sm:grid-rows-2">
                   <p>Kategori: {txn.category ?? "-"}</p>
                   <p>
-                    Confidence:{" "}
+                    Güven Skoru:{" "}
                     {txn.confidence ?? txn.category_confidence ?? "-"}
                   </p>
                 </div>

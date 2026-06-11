@@ -20,7 +20,7 @@ export default function QualityMetrics({ quality }: QualityMetricsProps) {
     <>
       <article className="rounded-3xl border border-black/10 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
         <h2 className="text-lg font-semibold">Kalite Metrikleri</h2>
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 grid gap-2 sm:grid-cols-1 lg:grid-cols-3">
           {qualityStats.map((item) => (
             <div
               key={item.label}

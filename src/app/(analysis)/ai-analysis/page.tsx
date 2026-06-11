@@ -53,33 +53,30 @@ export default function AiAnalysisPage() {
   const recommendedOption = recommendation?.options?.find(
     (option) => option.months === recommendation.recommended_months,
   );
-
+  console.log(analysis);
   return (
-    <div className="relative min-h-screen py-10">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-14 top-20 h-72 w-72 animate-[pulse_6s_ease-in-out_infinite] rounded-full bg-fuchsia-500/20 blur-3xl dark:bg-fuchsia-400/10" />
-        <div className="absolute -right-20 bottom-10 h-80 w-80 animate-[pulse_7s_ease-in-out_infinite] rounded-full bg-cyan-500/20 blur-3xl dark:bg-cyan-400/10" />
-      </div>
+    <div className="relative min-h-screen">
+      
 
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <section className="rounded-3xl border border-black/10 bg-white/80 p-7 shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-white/5">
           <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="inline-flex rounded-full border border-fuchsia-500/25 bg-fuchsia-500/10 px-3 py-1 text-xs font-semibold text-fuchsia-700 dark:text-fuchsia-300">
-                AI Sonuclari
+                AI Sonuçları
               </p>
               <h1 className="mt-4 text-3xl font-bold tracking-tight">
                 Finans Analiz Raporu
               </h1>
-              <p className="mt-2 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Transaction listesi, kategorilendirme, anomali sinyalleri,
-                harcama tahmini, taksit onerileri ve AI asistan cevabi tek
-                ekranda sunulur.
+              <p className="mt-2  text-sm text-slate-600 dark:text-slate-300">
+                Harcama listesi, kategorilendirme, anomali durumları,
+                harcama tahminleri ve taksit önerileri başarıyla tamamlandı.
+                
               </p>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
               Durum:{" "}
-              <span className="font-semibold">{analysis?.status ?? "-"}</span>
+              <span className="font-semibold">{analysis?.status ?? analysis?.status === "completed" ? "Tamamlandı" : "Devam Ediyor"}</span>
             </div>
           </div>
 
@@ -98,26 +95,26 @@ export default function AiAnalysisPage() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             <article className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15">
-              <p className="text-xs text-slate-500 dark:text-slate-400">Primary Category</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Ana Harcama Kategorisi</p>
               <p className="mt-1 text-lg font-semibold">
                 {result?.spending_profile?.primary_category ?? "-"}
               </p>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                Pay: {formatPercent(result?.spending_profile?.primary_category_share)}
+                Harcama ne kadar yer kaplıyor: {formatPercent(result?.spending_profile?.primary_category_share)}
               </p>
             </article>
             <article className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15">
-              <p className="text-xs text-slate-500 dark:text-slate-400">Predicted Next Month Spend</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Gelecek Ay Tahmini Harcama</p>
               <p className="mt-1 text-lg font-semibold">
                 {formatNumber(result?.forecast?.predicted_next_month_spend)}{" "}
                 {result?.forecast?.currency ?? ""}
               </p>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                Confidence: {result?.forecast?.confidence ?? "-"}
+                Güven Skoru: %{(result?.forecast?.confidence ?? 0) * 100}
               </p>
             </article>
             <article className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15">
-              <p className="text-xs text-slate-500 dark:text-slate-400">Recommended Installment</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Önerilen Taksit</p>
               <p className="mt-1 text-lg font-semibold">
                 {recommendation?.recommended_months ?? "-"} ay /{" "}
                 {recommendedOption
@@ -125,7 +122,7 @@ export default function AiAnalysisPage() {
                   : "-"}
               </p>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                Risk Level: {recommendedOption?.risk_level ?? "-"}
+                Risk Seviyesi: {recommendedOption?.risk_level ?? recommendedOption?.risk_level === "high" ? "Yüksek" : recommendedOption?.risk_level === "medium" ? "Orta" : "Düşük"}
               </p>
             </article>
           </div>
@@ -147,24 +144,25 @@ export default function AiAnalysisPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+          <div className="mt-6 grid gap-6 xl:grid-rows-[1.5fr_1fr]">
             <section className="space-y-6">
+              <QualityMetrics quality={analysis?.quality} />
               <TransactionTable transactions={result?.categorization?.transactions} />
               <CategorySummary summary={result?.categorization?.summary} />
               <AnomalyAiComment anomalies={result?.anomalies} />
               <InstallmentOptions recommendation={recommendation} />
             </section>
             <section className="space-y-6">
-              <AssistantAnswer assistant={result?.assistant} />
-              <QualityMetrics quality={analysis?.quality} />
-              <EngineInfo engine={analysis?.engine} warnings={analysis?.warnings} />
+              { /* <AssistantAnswer assistant={result?.assistant} /> */}
+              
+              { /* <EngineInfo engine={analysis?.engine} warnings={analysis?.warnings} /> */}
             </section>
           </div>
         )}
       </div>
 
       
-      {analysis?.analysis_id && <ChatBot analysisId={analysis.analysis_id}/>}
+      {analysis?.analysis_id && <ChatBot analysisId={analysis.analysis_id} assistant={analysis.result.assistant}/>}
     </div>
   );
 }

@@ -33,7 +33,7 @@ export async function startAnalysisAction(
             }
         },
         historical_transactions: transactions,
-        question: "Transactionların miktarı ne kadar?",
+        question: "En çok harcama yapılan kategori ney?",
         purchase_scenario: {
             amount: 6000,
             currency: "TRY",

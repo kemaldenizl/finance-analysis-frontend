@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState, useEffect } from "react";
 import { sendChatMessageAction } from "../actions";
+import { AssistantAnswer } from "@/src/features/analysis/ai-analysis/types/analysis.types";
 
 type ChatMessage = {
   id: string;
@@ -10,7 +11,7 @@ type ChatMessage = {
   meta?: string;
 };
 
-export default function ChatBot({ analysisId }: { analysisId: string }) {
+export default function ChatBot({ analysisId, assistant }: { analysisId: string, assistant: AssistantAnswer | undefined }) {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -63,6 +64,19 @@ export default function ChatBot({ analysisId }: { analysisId: string }) {
     ]);
   }
 
+  useEffect(() => {
+    if (assistant) {
+      setMessages((prev) => {
+        // Zaten eklenmişse tekrar ekleme
+        if (prev.some((m) => m.id === `user-${Date.now()}`)) return prev;
+        return [
+          ...prev,
+          { id: `user-${Date.now()}`, role: "user", text: assistant.question },
+          { id: `assistant-${Date.now() + 1}`, role: "assistant", text: assistant.answer },
+        ];
+      });
+    }
+  }, [assistant]);
   return (
     <>
       <button
@@ -81,7 +95,7 @@ export default function ChatBot({ analysisId }: { analysisId: string }) {
               Online
             </span>
           </div>
-          <div className="mt-4 h-[390px] overflow-y-auto rounded-xl border border-black/10 bg-background p-3 dark:border-white/15">
+          <div className="mt-4 h-[390px] overflow-y-auto rounded-xl border border-black/10 bg-background p-3 dark:border-white/15 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {hasMessages ? (
               <div className="space-y-3 text-sm">
                 {messages.map((message) => (
@@ -89,17 +103,12 @@ export default function ChatBot({ analysisId }: { analysisId: string }) {
                     <div
                       className={
                         message.role === "assistant"
-                          ? "ml-auto max-w-[90%] rounded-xl bg-cyan-500/15 px-3 py-2 text-cyan-900 dark:text-cyan-100"
-                          : "max-w-[90%] rounded-xl bg-slate-200 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
+                          ? "max-w-[90%] rounded-xl bg-cyan-500/15 px-3 py-2 text-cyan-900 dark:text-cyan-100"
+                          : "ml-auto max-w-[90%] rounded-xl bg-slate-200 px-3 py-2 text-slate-800 dark:bg-slate-800 dark:text-slate-100"
                       }
                     >
                       {message.text}
                     </div>
-                    {message.meta ? (
-                      <p className="mt-1 text-right text-[10px] text-slate-500 dark:text-slate-400">
-                        {message.meta}
-                      </p>
-                    ) : null}
                   </div>
                 ))}
                 {isSending ? (
