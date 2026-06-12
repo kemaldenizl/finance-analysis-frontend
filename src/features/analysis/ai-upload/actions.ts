@@ -109,7 +109,6 @@ export async function extractTransactionDataAction({
     });
 
     if (response.success) {
-      console.log(response.data);
       return {
         success: true,
         message: "Veriler başarıyla çıkarıldı.",

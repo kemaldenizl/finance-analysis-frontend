@@ -40,7 +40,7 @@ export default function InstallmentOptions({
                   Aylık Ödeme: {option.monthly_amount.toFixed(2)} {currency}
                 </p>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                  Yük Oranı: {option.monthly_burden_ratio}
+                  Yük Oranı: {(option.monthly_burden_ratio * 100).toFixed(2)}%
                 </p>
                 <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-200">
                   Risk: {option.risk_level === "high" ? "Yüksek" : option.risk_level === "medium" ? "Orta" : "Düşük"}

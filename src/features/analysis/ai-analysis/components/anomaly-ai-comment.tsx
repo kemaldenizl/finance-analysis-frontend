@@ -34,7 +34,7 @@ export default function AnomalyAiComment({ anomalies }: AnomalyAiCommentProps) {
                 <br />
                 <p className="mt-2 text-xs text-rose-900 dark:text-rose-100">
                   Tutar: {item.amount?.toFixed?.(2) ?? item.amount} {item.currency}{" "}
-                  | Seviye: {item.severity === "high" ? "Yüksek" : item.severity === "medium" ? "Orta" : "Düşük"} | Skor: {item.score}
+                  | Seviye: {item.severity === "high" ? "Yüksek" : item.severity === "medium" ? "Orta" : "Düşük"} | Skor: {(item.score * 100).toFixed(2)}%
                 </p>
               </div>
             ))

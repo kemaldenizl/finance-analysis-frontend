@@ -54,6 +54,8 @@ export default function AiAnalysisPage() {
     (option) => option.months === recommendation.recommended_months,
   );
 
+  console.log(result);
+
   return (
     <div className="relative min-h-screen">
       
@@ -151,11 +153,6 @@ export default function AiAnalysisPage() {
               <CategorySummary summary={result?.categorization?.summary} />
               <AnomalyAiComment anomalies={result?.anomalies} />
               <InstallmentOptions recommendation={recommendation} />
-            </section>
-            <section className="space-y-6">
-              { /* <AssistantAnswer assistant={result?.assistant} /> */}
-              
-              { /* <EngineInfo engine={analysis?.engine} warnings={analysis?.warnings} /> */}
             </section>
           </div>
         )}

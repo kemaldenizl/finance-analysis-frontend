@@ -16,6 +16,7 @@ export async function startAnalysisAction(
 
     const data = formDataToObject(formData);
     const transactions = JSON.parse(data.transactions as string);
+    const purchaseScenario = JSON.parse(data.purchase_scenario as string);
 
     const payload = {
         input_id: generateId(),
@@ -34,11 +35,7 @@ export async function startAnalysisAction(
         },
         historical_transactions: transactions,
         question: "En çok harcama yapılan kategori ney?",
-        purchase_scenario: {
-            amount: 6000,
-            currency: "TRY",
-            max_installment_months: 12
-        },
+        purchase_scenario: purchaseScenario,
         use_llm: true,
     }
 

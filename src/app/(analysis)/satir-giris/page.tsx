@@ -23,11 +23,26 @@ type TransactionFormRow = {
   amount: string;
   currency: string;
   direction: TransactionDirection;
+  installment: TransactionInstallment;
+};
+
+type TransactionInstallment = {
+  current: number | null;
+  raw: string | null;
+  total: number | null;
+  total_amount: number | null;
+  unit_amount: number | null;
 };
 
 type NormalizedMerchant = {
   normalized: string;
 }
+
+type PurchaseScenario = {
+  amount: number;
+  currency: string;
+  max_installment_months: number;
+};
 
 function createEmptyRow(): TransactionFormRow {
   return {
@@ -40,6 +55,13 @@ function createEmptyRow(): TransactionFormRow {
     amount: "",
     currency: "TRY",
     direction: "debit",
+    installment: {
+      current: null,
+      raw: null,
+      total: null,
+      total_amount: null,
+      unit_amount: null,
+    },
   };
 }
 
@@ -54,21 +76,91 @@ function createFullRow(transaction: Transaction): TransactionFormRow {
     amount: transaction.amount?.toString() ?? "",
     currency: transaction.original_currency ?? "TRY",
     direction: transaction.direction ?? "debit",
+    installment: {
+      current: transaction.installment.current ?? null,
+      raw: transaction.installment.raw ?? null,
+      total: transaction.installment.total ?? null,
+      total_amount: transaction.installment.total_amount ?? null,
+      unit_amount: transaction.installment.unit_amount ?? null,
+    },
   }
+}
+
+function hasInstallmentData(installment: TransactionInstallment): boolean {
+  return (
+    installment.current !== null ||
+    installment.total !== null ||
+    installment.total_amount !== null ||
+    installment.unit_amount !== null ||
+    (installment.raw !== null && installment.raw.trim() !== "")
+  );
 }
 
 export default function SatirGirisPage() {
   const router = useRouter();
   const [rows, setRows] = useState<TransactionFormRow[]>([createEmptyRow()]);
+  const [openInstallments, setOpenInstallments] = useState<Set<string>>(new Set());
+  const [purchaseScenario, setPurchaseScenario] = useState<PurchaseScenario>({
+    amount: 1000,
+    currency: "TRY",
+    max_installment_months: 12,
+  });
 
   const addNewRow = () => {
     setRows((prev) => [...prev, createEmptyRow()]);
+  };
+
+  const toggleInstallment = (id: string) => {
+    setOpenInstallments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const updateInstallment = (
+    id: string,
+    field: keyof TransactionInstallment,
+    value: string,
+  ) => {
+    setRows((prev) =>
+      prev.map((row) => {
+        if (row.transaction_id !== id) {
+          return row;
+        }
+
+        const trimmed = value.trim();
+        const nextValue =
+          field === "raw"
+            ? trimmed === ""
+              ? null
+              : value
+            : trimmed === ""
+              ? null
+              : Number(trimmed);
+
+        return {
+          ...row,
+          installment: { ...row.installment, [field]: nextValue },
+        };
+      }),
+    );
   };
 
   const removeRow = (id: string) => {
     setRows((prev) => {
       if (prev.length <= 1) return prev;
       return prev.filter((row) => row.transaction_id !== id);
+    });
+    setOpenInstallments((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
     });
   };
 
@@ -97,9 +189,16 @@ export default function SatirGirisPage() {
     if (raw) {
       const data = JSON.parse(raw) as ExtractedDataResponse;
       const transactions = data.response.result.transactions;
-      console.log("transactions", transactions);
       if (transactions && transactions.length > 0) {
-        setRows(transactions.map(createFullRow));
+        const nextRows = transactions.map(createFullRow);
+        setRows(nextRows);
+        setOpenInstallments(
+          new Set(
+            nextRows
+              .filter((row) => hasInstallmentData(row.installment))
+              .map((row) => row.transaction_id),
+          ),
+        );
       }
     }
   }, []);
@@ -143,8 +242,9 @@ export default function SatirGirisPage() {
           Şu an toplam <span className="font-semibold">{rows.length}</span>{" "}
           harcama satırı bulunuyor.
         </div>
-        <form action={formAction} >
+        <form action={formAction} className="space-y-4">
         <input type="hidden" name="transactions" value={JSON.stringify(rows)} />
+        <input type="hidden" name="purchase_scenario" value={JSON.stringify(purchaseScenario)} />
         <div className="space-y-4">
           {rows.map((row, index) => (
             <article
@@ -152,19 +252,47 @@ export default function SatirGirisPage() {
               className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15"
             >
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold">
-                  Harcama {index + 1}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => removeRow(row.transaction_id)}
-                  disabled={rows.length === 1}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 text-sm font-bold text-rose-700 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-300 cursor-pointer"
-                  aria-label={`Transaction ${index + 1} sil`}
-                  title="Bu satırı sil"
-                >
-                  X
-                </button>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold">
+                    Harcama {index + 1}
+                  </h2>
+                  {hasInstallmentData(row.installment) && (
+                    <span className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                      Taksitli
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => toggleInstallment(row.transaction_id)}
+                    aria-expanded={openInstallments.has(row.transaction_id)}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 text-xs font-semibold text-violet-700 transition hover:bg-violet-500/20 dark:text-violet-300 cursor-pointer"
+                    title="Taksit bilgisi gir"
+                  >
+                    <span
+                      className={`transition-transform duration-200 ${
+                        openInstallments.has(row.transaction_id) ? "rotate-180" : ""
+                      }`}
+                      aria-hidden
+                    >
+                      ▾
+                    </span>
+                    {openInstallments.has(row.transaction_id)
+                      ? "Taksiti Gizle"
+                      : "Taksit Girişi Yap"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.transaction_id)}
+                    disabled={rows.length === 1}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/10 text-sm font-bold text-rose-700 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-300 cursor-pointer"
+                    aria-label={`Transaction ${index + 1} sil`}
+                    title="Bu satırı sil"
+                  >
+                    X
+                  </button>
+                </div>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="space-y-1.5">
@@ -250,8 +378,154 @@ export default function SatirGirisPage() {
                   </select>
                 </label>
               </div>
+
+              {openInstallments.has(row.transaction_id) && (
+                <div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 dark:border-violet-400/20 dark:bg-violet-400/5">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300">
+                      ₺
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-semibold text-violet-900 dark:text-violet-100">
+                        Taksit Bilgileri
+                      </h3>
+                      <p className="text-xs text-violet-700/80 dark:text-violet-300/80">
+                        Bu harcama taksitli ise taksit detaylarını girin.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-medium">Mevcut Taksit Dönemi</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Mevcut Taksit Dönemi"
+                        value={row.installment.current ?? ""}
+                        onChange={(event) =>
+                          updateInstallment(
+                            row.transaction_id,
+                            "current",
+                            event.target.value,
+                          )
+                        }
+                        className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15 dark:bg-white/5"
+                      />
+                    </label>
+
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-medium">Toplam Taksit Sayısı</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Toplam Taksit Sayısı"
+                        value={row.installment.total ?? ""}
+                        onChange={(event) =>
+                          updateInstallment(
+                            row.transaction_id,
+                            "total",
+                            event.target.value,
+                          )
+                        }
+                        className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15 dark:bg-white/5"
+                      />
+                    </label>
+
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-medium">Aylık Taksit Tutarı</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Aylık Taksit Tutarı"
+                        value={row.installment.unit_amount ?? ""}
+                        onChange={(event) =>
+                          updateInstallment(
+                            row.transaction_id,
+                            "unit_amount",
+                            event.target.value,
+                          )
+                        }
+                        className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15 dark:bg-white/5"
+                      />
+                    </label>
+
+                    <label className="space-y-1.5">
+                      <span className="text-xs font-medium">Toplam Tutar</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Toplam Tutar"
+                        value={row.installment.total_amount ?? ""}
+                        onChange={(event) =>
+                          updateInstallment(
+                            row.transaction_id,
+                            "total_amount",
+                            event.target.value,
+                          )
+                        }
+                        className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-white/15 dark:bg-white/5"
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </article>
           ))}
+        </div>
+        <div className="space-y-4">
+          <article className="rounded-2xl border border-black/10 bg-background p-4 dark:border-white/15" >
+            <div className="flex flex-col items-start">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold">
+                  Taksitli Ürün Alım Tavsiyesi
+                </h2>
+              </div>
+              <p className="text-xs">Yapay Zeka girdiğin senaryoya göre aylık ödeme planı oluşturur.</p>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium">Toplam Fiyat</span>
+                <input
+                  type="number"
+                  placeholder="Toplam Fiyat"
+                  value={purchaseScenario.amount}
+                  onChange={(event) =>
+                    setPurchaseScenario({ ...purchaseScenario, amount: Number(event.target.value) })
+                  }
+                  className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium">Para Birimi</span>
+                <input
+                  type="text"
+                  placeholder="Para Birimi"
+                  value={purchaseScenario.currency}
+                  onChange={(event) =>
+                    setPurchaseScenario({ ...purchaseScenario, currency: event.target.value })
+                  }
+                  className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
+                />
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="text-xs font-medium">Maksimum Taksit Ay Sayısı</span>
+                <input
+                  type="number"
+                  placeholder="Maksimum Taksit Ay Sayısı"
+                  value={purchaseScenario.max_installment_months}
+                  onChange={(event) =>
+                    setPurchaseScenario({ ...purchaseScenario, max_installment_months: Number(event.target.value) })
+                  }
+                  className="w-full rounded-xl border border-black/10 bg-white/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/15 dark:bg-white/5"
+                />
+              </label>
+            </div>
+          </article>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
