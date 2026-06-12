@@ -18,6 +18,7 @@ export type AnalysisActionState = {
     success: boolean;
     message?: string;
     data?: AnalysisResponse;
+    errors?: string[];
 };
 
 export type AnalysisResponse = {

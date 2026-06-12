@@ -1,10 +1,12 @@
 "use server";
 
+import { z } from "zod";
 import { AnalysisActionState } from "./types/analysis.types";
 import { routeApi } from "@/src/shared/lib/api/route-api";
 import { AnalysisResponse } from "./types/analysis.types";
 import { getAccessToken, getRefreshToken } from "@/src/shared/lib/auth/token-cookie";
 import { formDataToObject } from "@/src/shared/lib/validation/form-validation.ts";
+import { aiAnalysisSchema } from "./schema";
 
 export async function startAnalysisAction(
     _prevState: AnalysisActionState,
@@ -17,6 +19,19 @@ export async function startAnalysisAction(
     const data = formDataToObject(formData);
     const transactions = JSON.parse(data.transactions as string);
     const purchaseScenario = JSON.parse(data.purchase_scenario as string);
+
+    const validation = aiAnalysisSchema.safeParse({
+        transactions,
+        purchase_scenario: purchaseScenario,
+    });
+
+    if (!validation.success) {
+        return {
+            success: false,
+            message: "Lütfen girdiğiniz işlem bilgilerini kontrol ediniz.",
+            errors: formatValidationErrors(validation.error),
+        };
+    }
 
     const payload = {
         input_id: generateId(),
@@ -66,4 +81,22 @@ export async function startAnalysisAction(
 
 function generateId(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+function formatValidationErrors(error: z.ZodError): string[] {
+    const messages = error.issues.map((issue) => {
+        const [first, second] = issue.path;
+
+        if (first === "transactions" && typeof second === "number") {
+            return `Harcama ${second + 1}: ${issue.message}`;
+        }
+
+        if (first === "purchase_scenario") {
+            return `Taksit senaryosu: ${issue.message}`;
+        }
+
+        return issue.message;
+    });
+
+    return Array.from(new Set(messages));
 }

@@ -528,6 +528,26 @@ export default function SatirGirisPage() {
           </article>
         </div>
 
+        {state.errors && state.errors.length > 0 ? (
+          <div
+            aria-live="polite"
+            className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-4"
+          >
+            <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+              {state.message ?? "Lütfen girdiğiniz bilgileri kontrol ediniz."}
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-red-600 dark:text-red-300">
+              {state.errors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        ) : state.message && !state.success ? (
+          <p aria-live="polite" className="mt-6 text-sm text-red-500">
+            {state.message}
+          </p>
+        ) : null}
+
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <button
             type="button"

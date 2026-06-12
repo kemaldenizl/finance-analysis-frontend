@@ -14,6 +14,7 @@ export default function InstallmentOptions({
     <>
       <article className="rounded-3xl border border-black/10 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
         <h2 className="text-lg font-semibold">Taksit Önerileri</h2>
+        <p>Gelecek ay tahmini harcamanıza göre talep edilen tutar için aylık taksit önerileri sunulmuştur.</p>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           Talep edilen tutar: {recommendation?.requested_amount ?? "-"} {currency}{" "}
         </p>
