@@ -97,7 +97,7 @@ export default function SatirGirisPage() {
     if (raw) {
       const data = JSON.parse(raw) as ExtractedDataResponse;
       const transactions = data.response.result.transactions;
-
+      console.log("transactions", transactions);
       if (transactions && transactions.length > 0) {
         setRows(transactions.map(createFullRow));
       }
@@ -129,18 +129,19 @@ export default function SatirGirisPage() {
             Satır Satır Transaction Girişi
           </p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight">
-            İşlem Verilerini Elle Gir
+            {rows.length > 0 ? "İşlem Verileri Başarıyla Yüklendi" : "İşlem Verilerini Elle Gir"}
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            JSON çıktısındaki temel alanlara uygun bilgileri satır satır
-            girebilirsin. İleride dosyadan gelen veriler de bu forma otomatik
-            aktarılacak şekilde düzenlenebilir.
+            {
+              rows.length > 0 ? "Verileri düzenleyebilir kontrol edebilirsiniz." : 
+              "Yapay zekanın analiz etmesini istediğiniz bilgilerinizi sırayla girebilirsiniz."
+            }
           </p>
         </div>
 
         <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4 text-sm text-cyan-900 dark:text-cyan-100">
           Şu an toplam <span className="font-semibold">{rows.length}</span>{" "}
-          transaction satırı bulunuyor.
+          harcama satırı bulunuyor.
         </div>
         <form action={formAction} >
         <input type="hidden" name="transactions" value={JSON.stringify(rows)} />
@@ -152,7 +153,7 @@ export default function SatirGirisPage() {
             >
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-sm font-semibold">
-                  Transaction {index + 1}
+                  Harcama {index + 1}
                 </h2>
                 <button
                   type="button"
@@ -182,7 +183,7 @@ export default function SatirGirisPage() {
                   <span className="text-xs font-medium">Açıklama</span>
                   <input
                     type="text"
-                    placeholder="TRENDYOL YEMEK"
+                    placeholder="Açıklama"
                     value={row.description}
                     onChange={(event) =>
                       updateRow(row.transaction_id, "description", event.target.value)
@@ -192,10 +193,10 @@ export default function SatirGirisPage() {
                 </label>
 
                 <label className="space-y-1.5">
-                  <span className="text-xs font-medium">Merchant</span>
+                  <span className="text-xs font-medium">Satıcı</span>
                   <input
                     type="text"
-                    placeholder="TRENDYOL"
+                    placeholder="Satıcı bilgileri"
                     value={row.merchant.normalized}
                     onChange={(event) =>
                       updateRow(row.transaction_id, "merchant", event.target.value)

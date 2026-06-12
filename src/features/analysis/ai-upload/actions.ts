@@ -69,6 +69,13 @@ type ExtractTransactionDataInput = {
   fileName: string;
 };
 
+const EXTRACT_MAX_ATTEMPTS = 3;
+const EXTRACT_RETRY_DELAYS_MS = [800, 1500];
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function extractTransactionDataAction({
   inputId,
   fileName,
@@ -83,29 +90,42 @@ export async function extractTransactionDataAction({
   const accessToken = await getAccessToken();
   const refreshToken = await getRefreshToken();
 
-  const response = await routeApi<ExtractedDataResponse>({
-    endpoint: "/api/transactions/extract",
-    method: "POST",
-    body: {
-      input_id: inputId,
-      file_name: fileName,
-    },
-    headers: {
-      Authorization: `Bearer ${accessToken ?? ""}`,
-    },
-    refreshToken,
-  });
+  /**
+   * Dosya yeni yüklendiği için backend ilk hızlı istekte henüz hazır
+   * olmayabiliyor. Geçici hatalarda kısa bekleme ile birkaç kez tekrar deniyoruz.
+   */
+  for (let attempt = 0; attempt < EXTRACT_MAX_ATTEMPTS; attempt += 1) {
+    const response = await routeApi<ExtractedDataResponse>({
+      endpoint: "/api/transactions/extract",
+      method: "POST",
+      body: {
+        input_id: inputId,
+        file_name: fileName,
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken ?? ""}`,
+      },
+      refreshToken,
+    });
 
-  if (!response.success) {
-    return {
-      success: false,
-      message: "Veriler çıkarılırken bir hata oluştu. Lütfen tekrar deneyin.",
-    };
+    if (response.success) {
+      console.log(response.data);
+      return {
+        success: true,
+        message: "Veriler başarıyla çıkarıldı.",
+        data: response.data,
+      };
+    }
+
+    const retryDelay = EXTRACT_RETRY_DELAYS_MS[attempt];
+
+    if (retryDelay !== undefined) {
+      await delay(retryDelay);
+    }
   }
 
   return {
-    success: true,
-    message: "Veriler başarıyla çıkarıldı.",
-    data: response.data,
+    success: false,
+    message: "Veriler çıkarılırken bir hata oluştu. Lütfen tekrar deneyin.",
   };
 }

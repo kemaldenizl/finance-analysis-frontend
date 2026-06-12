@@ -53,7 +53,7 @@ export default function AiAnalysisPage() {
   const recommendedOption = recommendation?.options?.find(
     (option) => option.months === recommendation.recommended_months,
   );
-  console.log(analysis);
+
   return (
     <div className="relative min-h-screen">
       

@@ -10,7 +10,6 @@ export default function InstallmentOptions({
   const options = recommendation?.options ?? [];
   const currency = recommendation?.currency ?? "TRY";
 
-  console.log(recommendation);
   return (
     <>
       <article className="rounded-3xl border border-black/10 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
@@ -44,7 +43,7 @@ export default function InstallmentOptions({
                   Yük Oranı: {option.monthly_burden_ratio}
                 </p>
                 <p className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-200">
-                  Risk: {option.risk_level}
+                  Risk: {option.risk_level === "high" ? "Yüksek" : option.risk_level === "medium" ? "Orta" : "Düşük"}
                 </p>
               </div>
             ))}
