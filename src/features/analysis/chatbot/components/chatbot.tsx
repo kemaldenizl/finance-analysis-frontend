@@ -69,6 +69,8 @@ export default function ChatBot({ analysisId, assistant }: { analysisId: string,
       setMessages((prev) => {
         // Zaten eklenmişse tekrar ekleme
         if (prev.some((m) => m.id === `user-${Date.now()}`)) return prev;
+        if (prev.some((m) => m.id === `assistant-${Date.now() + 1}`)) return prev;
+        if (prev.some((m) => m.text === assistant.answer || m.text === assistant.question)) return prev;
         return [
           ...prev,
           { id: `user-${Date.now()}`, role: "user", text: assistant.question },
@@ -77,6 +79,7 @@ export default function ChatBot({ analysisId, assistant }: { analysisId: string,
       });
     }
   }, [assistant]);
+  console.log(messages);
   return (
     <>
       <button
@@ -88,14 +91,14 @@ export default function ChatBot({ analysisId, assistant }: { analysisId: string,
       </button>
 
       {isChatOpen ? (
-        <aside className="fixed bottom-24 right-6 z-30 h-[520px] w-[360px] rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-slate-950/90">
-          <div className="flex items-center justify-between">
+        <aside className="fixed bottom-19 right-6 z-30 flex h-[min(520px,calc(100vh-7rem))] w-[360px] flex-col rounded-2xl border border-black/10 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-slate-950/90">
+          <div className="flex shrink-0 items-center justify-between">
             <h3 className="text-sm font-semibold">AI Chatbot</h3>
             <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
               Online
             </span>
           </div>
-          <div className="mt-4 h-[390px] overflow-y-auto rounded-xl border border-black/10 bg-background p-3 dark:border-white/15 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-4 min-h-0 flex-1 overflow-y-auto rounded-xl border border-black/10 bg-background p-3 dark:border-white/15 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {hasMessages ? (
               <div className="space-y-3 text-sm">
                 {messages.map((message) => (
@@ -122,9 +125,9 @@ export default function ChatBot({ analysisId, assistant }: { analysisId: string,
             )}
           </div>
           {errorMessage ? (
-            <p className="mt-2 text-xs text-red-500">{errorMessage}</p>
+            <p className="mt-2 shrink-0 text-xs text-red-500">{errorMessage}</p>
           ) : null}
-          <form className="mt-3 flex gap-2" onSubmit={handleSubmit}>
+          <form className="mt-3 flex shrink-0 gap-2" onSubmit={handleSubmit}>
             <input
               type="text"
               value={question}

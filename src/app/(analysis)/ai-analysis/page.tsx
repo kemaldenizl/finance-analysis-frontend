@@ -146,19 +146,15 @@ export default function AiAnalysisPage() {
             </Link>
           </div>
         ) : (
-          <div className="mt-6 grid gap-6 xl:grid-rows-[1.5fr_1fr]">
-            <section className="space-y-6">
-              <QualityMetrics quality={analysis?.quality} />
-              <TransactionTable transactions={result?.categorization?.transactions} />
-              <CategorySummary summary={result?.categorization?.summary} />
-              <AnomalyAiComment anomalies={result?.anomalies} />
-              <InstallmentOptions recommendation={recommendation} />
-            </section>
-          </div>
+          <section className="mt-6 space-y-6">
+            <QualityMetrics quality={analysis?.quality} />
+            <TransactionTable transactions={result?.categorization?.transactions} />
+            <CategorySummary summary={result?.categorization?.summary} />
+            <AnomalyAiComment anomalies={result?.anomalies} />
+            <InstallmentOptions recommendation={recommendation} />
+          </section>
         )}
       </div>
-
-      
       {analysis?.analysis_id && <ChatBot analysisId={analysis.analysis_id} assistant={analysis.result.assistant}/>}
     </div>
   );
