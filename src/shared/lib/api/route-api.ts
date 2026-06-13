@@ -85,19 +85,27 @@ export async function routeApi<TResponse, TBody = unknown>({
   cache = "no-store",
   refreshToken = null,
 }: RouteApiOptions<TBody>): Promise<ApiResult<TResponse>> {
+  /**
+   * FormData (ör. dosya yükleme) gönderildiğinde Content-Type elle ayarlanmaz;
+   * fetch boundary'i kendisi belirler ve gövde JSON'a çevrilmez.
+   */
+  const isFormData = body instanceof FormData;
+
   try {
     const response = await fetch(buildRouteUrl(endpoint, query), {
       method,
       cache,
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...headers,
         'Refresh-Token': refreshToken ?? '',
       },
       credentials: "include",
       body:
         method !== "GET" && body !== undefined
-          ? JSON.stringify(body)
+          ? isFormData
+            ? (body as FormData)
+            : JSON.stringify(body)
           : undefined,
     });
 

@@ -3,6 +3,10 @@ import { cookies } from "next/headers";
 import { AppShell } from "@/src/shared/components/layout/app-shell";
 import { isThemeMode, type ThemeMode } from "@/src/shared/types/theme.types";
 import "./globals.css";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "FinPilot AI | Akıllı Finans Destek Sistemi",
@@ -29,7 +33,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="tr"
-      className={`${currentTheme === "dark" ? "dark" : ""} h-full antialiased`}
+      className={cn("h-full", "antialiased", currentTheme === "dark" ? "dark" : "", "font-sans", geist.variable)}
     >
       <body className="min-h-full">
         <AppShell currentTheme={currentTheme}>{children}</AppShell>

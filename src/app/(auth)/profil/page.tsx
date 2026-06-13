@@ -31,7 +31,7 @@ export default function ProfilPage() {
     <section className="relative mx-auto flex w-full max-w-5xl flex-col gap-6 py-2 md:gap-8 md:py-6">
       {/* Başlık */}
       <header className="flex flex-col gap-4">
-        <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+        <span className="w-fit inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
           <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 dark:bg-cyan-300" />
           Profil ve Güvenlik
         </span>
@@ -76,7 +76,7 @@ export default function ProfilPage() {
               >
                 <div className="flex items-center gap-2">
                   <span className="mb-2 flex h-2 w-2 rounded-full bg-cyan-500 dark:bg-cyan-300" />
-                  <p className="text-sm font-semibold">{item.title}</p>
+                  <p className="text-xs font-semibold">{item.title}</p>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">
                   {item.description}
