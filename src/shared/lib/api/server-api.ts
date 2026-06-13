@@ -12,21 +12,16 @@ type ServerApiOptions<TBody = unknown> = {
   token?: string;
   authRetry?: boolean;
   refreshToken?: string | null;
-  link?: boolean;
 };
 
 const API_BASE_URL = process.env.API_BASE_URL;
-const API_BASE_URL_SERVER = process.env.API_BASE_URL_SERVER;
 
-function buildUrl(endpoint: string, query?: QueryParams, link?: boolean): string {
+function buildUrl(endpoint: string, query?: QueryParams): string {
   if (!API_BASE_URL) {
     throw new Error("API_BASE_URL environment variable is missing.");
   }
-  if (!API_BASE_URL_SERVER) {
-    throw new Error("API_BASE_URL_SERVER environment variable is missing.");
-  }
 
-  const base = link ? API_BASE_URL_SERVER.replace(/\/$/, "") : API_BASE_URL.replace(/\/$/, "");
+  const base = API_BASE_URL.replace(/\/$/, "");
   const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
   const url = new URL(`${base}${path}`);
@@ -79,7 +74,6 @@ export async function serverApi<TResponse, TBody = unknown>({
   token,
   authRetry = false,
   refreshToken = null,
-  link = false,
 }: ServerApiOptions<TBody>): Promise<ApiResult<TResponse>> {
   /**
    * FormData (ör. dosya yükleme) gönderildiğinde Content-Type'ı tarayıcı/fetch
@@ -101,7 +95,7 @@ export async function serverApi<TResponse, TBody = unknown>({
   });
 
   try {
-    const response = await fetch(buildUrl(endpoint, query, link), {
+    const response = await fetch(buildUrl(endpoint, query), {
       method,
       cache,
       next,
@@ -120,7 +114,7 @@ export async function serverApi<TResponse, TBody = unknown>({
       return parseResponse<TResponse>(response);
     }
 
-    const retryResponse = await fetch(buildUrl(endpoint, query, link), {
+    const retryResponse = await fetch(buildUrl(endpoint, query), {
       method,
       cache,
       next,

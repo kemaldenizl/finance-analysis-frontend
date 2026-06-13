@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
         },
         authRetry: true,
         refreshToken,
-        link: true,
     });
 
     return NextResponse.json(response, { status: response.status });
