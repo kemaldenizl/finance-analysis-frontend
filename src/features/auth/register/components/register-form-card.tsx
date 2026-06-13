@@ -51,15 +51,23 @@ export function RegisterFormCard() {
 
       <form className="space-y-4" action={formAction}>
         {registerFields.map((field) => (
-          <label key={field.id} className="block space-y-2">
-            <span className="text-sm font-medium">{field.label}</span>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{field.description}</p>
+          <div key={field.id} className="block space-y-2">
+            <label htmlFor={field.id} className="text-sm font-medium">
+              {field.label}
+            </label>
+            {field.description ? (
+              <p id={`${field.id}-description`} className="text-xs text-slate-500 dark:text-slate-400">
+                {field.description}
+              </p>
+            ) : null}
             <div className="relative">
               <input
+                id={field.id}
                 name={field.name}
                 type={field.name === "password" ? (isPasswordVisible ? "text" : "password") : field.type}
                 placeholder={field.placeholder}
                 autoComplete={field.autoComplete}
+                aria-describedby={field.description ? `${field.id}-description` : undefined}
                 required
                 className={`w-full rounded-xl border border-black/10 bg-background px-3.5 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-white/15 ${
                   field.name === "password" ? "pr-10" : ""
@@ -114,7 +122,7 @@ export function RegisterFormCard() {
                 <p key={error} className="text-xs text-red-500">{error}</p>
               ))
             }
-          </label>
+          </div>
         ))}
         <p className="text-sm text-red-500">{state.message}</p>
         <SubmitButton label="Hesap Oluştur" />

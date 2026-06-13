@@ -49,10 +49,13 @@ export function LoginFormCard() {
 
       <form className="space-y-4" action={formAction}>
         {loginFields.map((field) => (
-          <label key={field.id} className="block space-y-2">
-            <span className="text-sm font-medium">{field.label}</span>
+          <div key={field.id} className="block space-y-2">
+            <label htmlFor={field.id} className="text-sm font-medium">
+              {field.label}
+            </label>
             <div className="relative">
               <input
+                id={field.id}
                 name={field.name}
                 type={field.name === "password" ? (isPasswordVisible ? "text" : "password") : field.type}
                 placeholder={field.placeholder}
@@ -110,7 +113,7 @@ export function LoginFormCard() {
                 <p key={error} className="text-xs text-red-500">{error}</p>
               ))
             }
-          </label>
+          </div>
         ))}
 
         <button
