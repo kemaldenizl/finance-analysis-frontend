@@ -3,6 +3,7 @@ import type { LoginDto, LoginResponse } from "@/src/features/auth/login/types/lo
 import type { RegisterDto, RegisterResponse } from "@/src/features/auth/register/types/register.types";
 import type { ChatResponse } from "@/src/features/analysis/chatbot/types/chat.types";
 import type { UserProfile } from "@/src/features/user/types/user.types";
+import { analysisResponse, extractedDataResponse, uploadFileData } from "../fixtures/finance";
 
 const loginResponse: LoginResponse = {
   user: {
@@ -47,6 +48,42 @@ const chatResponse: ChatResponse = {
 };
 
 export const handlers = [
+  http.post("http://backend.test/api/auth/login", async ({ request }) => {
+    const body = (await request.json()) as LoginDto;
+
+    if (body.email === "mfa@finpilot.test") {
+      return HttpResponse.json<LoginResponse>({
+        ...loginResponse,
+        requiresMfa: true,
+        mfaChallenge: {
+          challengeToken: "challenge-token",
+          expiresAtUtc: "2030-01-01T00:05:00.000Z",
+        },
+      });
+    }
+
+    return HttpResponse.json<LoginResponse>(loginResponse);
+  }),
+
+  http.post("http://backend.test/api/transactions/file-input", () => {
+    return HttpResponse.json(uploadFileData);
+  }),
+
+  http.post("http://backend.test/api/transactions/file-extract", () => {
+    return HttpResponse.json(extractedDataResponse);
+  }),
+
+  http.post("http://backend.test/api/transactions/ai-save", () => {
+    return HttpResponse.json(analysisResponse);
+  }),
+
+  http.post("http://backend.test/api/mfa/setup/begin", () => {
+    return HttpResponse.json({
+      manualEntryKey: "JBSWY3DPEHPK3PXP",
+      otpAuthUri: "otpauth://totp/FinPilot:test?secret=JBSWY3DPEHPK3PXP&issuer=FinPilot",
+    });
+  }),
+
   http.post("http://localhost:3000/api/auth/login", async ({ request }) => {
     const body = (await request.json()) as LoginDto;
 
@@ -133,6 +170,28 @@ export const handlers = [
         success: true,
         status: 200,
         data: chatResponse,
+      },
+      { status: 200 },
+    );
+  }),
+
+  http.post("http://localhost:3000/api/transactions/file-input", () => {
+    return HttpResponse.json(
+      {
+        success: true,
+        status: 200,
+        data: uploadFileData,
+      },
+      { status: 200 },
+    );
+  }),
+
+  http.post("http://localhost:3000/api/transactions/ai", () => {
+    return HttpResponse.json(
+      {
+        success: true,
+        status: 200,
+        data: analysisResponse,
       },
       { status: 200 },
     );
